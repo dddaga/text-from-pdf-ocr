@@ -7,7 +7,7 @@ import uuid
 
 
 class TableRepositories:
-    def __init__(self, filepath, rect, SORT_METHOD='top-to-bottom', MAX_THRESHOLD_VALUE=255, BLOCK_SIZE=15,
+    def __init__(self, filepath, rect=None, SORT_METHOD='top-to-bottom', MAX_THRESHOLD_VALUE=255, BLOCK_SIZE=15,
                  THRESHOLD_CONSTANT=0, SCALE=15):
         '''
         :param filepath: absolute path of input image file , or an image as a numpy array

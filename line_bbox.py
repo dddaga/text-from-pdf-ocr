@@ -13,7 +13,7 @@ from pytesseract import Output
 from tesserocr import PyTessBaseAPI, RIL, iterate_level
 
 
-PDF_path = "/home/naresh/Tesseract/Languagefiles/Hindi/law_commisionofindia/law_commisionofindia.pdf"
+PDF_path = "/home/naresh/Tesseract/Languagefiles/Hindi/law_commisionofindia/201200000032016_4-1-7.pdf"
 img_save_path =  "/home/naresh/Tesseract/PDF_Images/Hindi/"+"law_commisionofindia"
 
 
@@ -45,28 +45,39 @@ def get_font(image_path):
                  print(u'symbol {}, font: {}'.format(symbol, word_attributes['font_name']))
 
 
-def line_bbox(img,line_text_dict,page_no):
+def line_bbox(img,line_text_dict,page_no,line_num):
 	d = pytesseract.image_to_data(img, output_type=Output.DICT)
+	#print(len(d['page_num']))
 	n_boxes = len(d['level'])
 	for i in range(n_boxes):
 	    (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
-	    
 	    if int(d['conf'][i])==-1 and h<=150:
 	        dict1={}
-	        dict1["x"]=x
-	        dict1["y"]=y
-	        dict1["page_no"]=page_no #,dict1["font-size"]=pointsize,dict1["is_bold"]=bold,dict1["node_index"]=x
-	        #dict1["font-family"]=font_name
-	        if dict1 in line_text_dict:
+	        dict1["x"] = x
+	        dict1["y"] = y
+	        dict1["page_no"] = page_no #,dict1["font-size"]=pointsize,dict1["is_bold"]=bold,dict1["node_index"]=x
+	        dict1["node_index"] = line_num
+	        flag = False
+	        for k in range(5):
+	            dict2=dict1.copy()
+	            dict2["node_index"]=dict2["node_index"]-k-1
+	            if dict2 in line_text_dict:
+	                flag=True
+	                break
+	        if flag == True:
 	            pass
 	        else:
 	            line_text_dict.append(dict1)
-	return line_text_dict
+	            #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+	            line_num=line_num+1
+	#cv2.imwrite("/home/naresh/Tesseract/bounding_box/"+str(page_no)+".jpg", img)
+	return line_text_dict , line_num
 
 
 def line_extract(PDF_path,img_save_path):
 	pages = convert_from_path(PDF_path, 500) 
 	line_text_dict = []
+	line_num=1
 	for page_no,page in enumerate(pages):
 		filename = img_save_path+'_'+str(page_no)+".jpg"
 		# Save the image of the page in system 
@@ -85,11 +96,11 @@ def line_extract(PDF_path,img_save_path):
 		    w = tables["response"]["tables"][0]['w']
 		    h = tables["response"]["tables"][0]['h']
 		    img[y:y+h,x:x+w]=255
-		    line_text_dict = line_bbox(img,line_text_dict,page_no)
+		    line_text_dict, line_num = line_bbox(img,line_text_dict,page_no+1,line_num)
 
 
 		else:
-		    line_text_dict = line_bbox(img,line_text_dict,page_no)
+		    line_text_dict, line_num = line_bbox(img,line_text_dict,page_no+1,line_num)
 	
 	return line_text_dict
 		
